@@ -1008,9 +1008,14 @@ class KeyboardContainer(
         stripScroll.scrollTo(0, 0)
         items.forEachIndexed { i, item ->
             if (i > 0) stripRow.addView(divider(), LinearLayout.LayoutParams(dividerWidth, (18 * density).toInt()))
-            val cell = toolbarText(item.label, 16f).apply {
-                setPadding((14 * density).toInt(), 0, (14 * density).toInt(), 0)
+            val cell = toolbarText(item.label, 15f).apply {
+                setPadding((6 * density).toInt(), 0, (6 * density).toInt(), 0)
                 minWidth = (56 * density).toInt()
+                // Three words share the width: shrink long ones to fit instead of cutting them to "sho…".
+                // (Scrolling rows size to their text, so they keep the fixed size.)
+                if (fill) androidx.core.widget.TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+                    this, 11, 16, 1, TypedValue.COMPLEX_UNIT_SP,
+                )
                 if (item.emphasized) typeface = Typeface.DEFAULT_BOLD
                 contentDescription = item.label
                 setOnClickListener { onAction(item.action) }
