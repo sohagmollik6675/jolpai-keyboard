@@ -245,23 +245,28 @@ fun EmojiPanel(data: EmojiPanelData, query: String, colors: PanelColors, actions
             }
         }
 
-        // Category bar.
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .padding(vertical = 3.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(colors.surface.copy(alpha = colors.surface.alpha * 0.7f))
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 3.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            tabs.forEach { t ->
-                val selected = tab == t && !(searching && t != Tab.Gifs)
-                CategoryTab(t.icon, selected, colors) {
-                    tab = t
-                    if (t != Tab.Gifs) actions.clearSearch()
+        // Bottom row: a button back to the keys (the panel can replace the keys, so it needs its own
+        // way out), then the category bar.
+        Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+            RoundButton(R.drawable.ms_keyboard, "Back to the keys", colors) { actions.close() }
+            Spacer(Modifier.width(6.dp))
+            Row(
+                Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .padding(vertical = 3.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(colors.surface.copy(alpha = colors.surface.alpha * 0.7f))
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 3.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                tabs.forEach { t ->
+                    val selected = tab == t && !(searching && t != Tab.Gifs)
+                    CategoryTab(t.icon, selected, colors) {
+                        tab = t
+                        if (t != Tab.Gifs) actions.clearSearch()
+                    }
                 }
             }
         }
