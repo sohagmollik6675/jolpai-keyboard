@@ -1198,14 +1198,18 @@ class KeyboardController(
     private val language: Language
         get() = if (activeLayout == LayoutId.ENGLISH) Language.ENGLISH else Language.BANGLA
 
-    /** Suggestions are shown in normal text and address fields, never in password or no-suggestion fields. */
+    /**
+     * Suggestions are shown in normal text and address fields, never in password fields. Many apps
+     * set the "no suggestions" flag on ordinary chat and search boxes, so it only stops autocorrect
+     * and learning (below), not the word strip.
+     */
     private val suggestionsEnabled: Boolean
         get() = if (translating) {
             // The translate box is plain text: suggestions help spell what is being translated.
             searchPanel == null && suggester != null && !editorField.isPassword
         } else {
             !typingInBox && suggester != null && settings.showSuggestions &&
-                !editorField.isPassword && !editorField.noSuggestions &&
+                !editorField.isPassword &&
                 (editorField.kind == FieldKind.TEXT || editorField.kind == FieldKind.URI)
         }
 
@@ -1220,7 +1224,7 @@ class KeyboardController(
      */
     private val autoCorrectEnabled: Boolean
         get() = suggestionsEnabled && activeLayout == LayoutId.ENGLISH && !translating &&
-            settings.autoCorrect && editorField.kind == FieldKind.TEXT
+            !editorField.noSuggestions && settings.autoCorrect && editorField.kind == FieldKind.TEXT
 
     private fun suggestOptions(typed: String, ctx: WordContext = wordContext) = SuggestOptions(
         autoCorrect = autoCorrectEnabled && typed != rejectedWord,
@@ -1435,7 +1439,7 @@ class KeyboardController(
 
     /** Calculator and snippets work wherever suggestions could, even with suggestions turned off. */
     private val toolsAllowed: Boolean
-        get() = !typingInBox && !editorField.isPassword && !editorField.noSuggestions &&
+        get() = !typingInBox && !editorField.isPassword &&
             (editorField.kind == FieldKind.TEXT || editorField.kind == FieldKind.URI)
 
     /** The strip; while styled typing is on, it starts with the style's name and ✕ to turn it off. */
