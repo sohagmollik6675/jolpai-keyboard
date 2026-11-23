@@ -83,6 +83,22 @@ class VoiceTyping(
     fun hasPermission(): Boolean =
         ContextCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 
+    /**
+     * Google's speech service, if installed. China-market ROMs (HyperOS, MIUI) often have it but no
+     * system default pointing at it (or a default that only knows Chinese), so we ask for it by name.
+     */
+    private fun googleService(): android.content.ComponentName? = runCatching {
+        context.packageManager.queryIntentServices(Intent(android.speech.RecognitionService.SERVICE_INTERFACE), 0)
+            .firstOrNull { it.serviceInfo.packageName == GOOGLE_APP }
+            ?.serviceInfo?.let { android.content.ComponentName(it.packageName, it.name) }
+    }.getOrNull()
+
+    private fun available(): Boolean = SpeechRecognizer.isRecognitionAvailable(context) || googleService() != null
+
+    private fun newRecognizer(): SpeechRecognizer =
+        googleService()?.let { SpeechRecognizer.createSpeechRecognizer(context, it) }
+            ?: SpeechRecognizer.createSpeechRecognizer(context)
+
     /** Starts (or restarts in another language) continuous listening. */
     fun start(languageTag: String) {
         language = languageTag
@@ -90,7 +106,7 @@ class VoiceTyping(
             _state.value = VoiceState.NoPermission
             return
         }
-        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+        if (!available()) {
             _state.value = VoiceState.Unavailable
             return
         }
@@ -141,7 +157,7 @@ class VoiceTyping(
         if (!active) return
         main.removeCallbacks(listenLater)
         val id = ++session
-        val r = recognizer ?: SpeechRecognizer.createSpeechRecognizer(context).also { recognizer = it }
+        val r = recognizer ?: newRecognizer().also { recognizer = it }
         r.setRecognitionListener(Listener(id))
         _state.value = VoiceState.Starting
         lastPartial = ""
@@ -272,11 +288,11 @@ class VoiceTyping(
             result(VoiceAvailability.UNKNOWN)
             return
         }
-        if (!SpeechRecognizer.isRecognitionAvailable(context)) {
+        if (!available()) {
             result(VoiceAvailability.UNSUPPORTED)
             return
         }
-        val checker = SpeechRecognizer.createSpeechRecognizer(context)
+        val checker = newRecognizer()
         val executor = Executor { main.post(it) }
         checker.checkRecognitionSupport(
             intent(languageTag),
@@ -298,7 +314,7 @@ class VoiceTyping(
     /** Asks the speech service to download the offline pack for [languageTag] (Android 13+). */
     fun downloadOffline(languageTag: String) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-        val r = SpeechRecognizer.createSpeechRecognizer(context)
+        val r = newRecognizer()
         r.triggerModelDownload(intent(languageTag))
         main.postDelayed({ r.destroy() }, 5_000)
     }
@@ -315,6 +331,7 @@ class VoiceTyping(
     }
 
     private companion object {
+        const val GOOGLE_APP = "com.google.android.googlequicksearchbox"
         /** Pause after a language switch, so quick repeated taps end in a single restart. */
         const val SWITCH_SETTLE_MS = 350L
         const val RETRY_BASE_MS = 300L
