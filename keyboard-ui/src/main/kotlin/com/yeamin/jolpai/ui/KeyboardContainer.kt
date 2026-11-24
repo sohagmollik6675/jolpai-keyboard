@@ -1018,7 +1018,11 @@ class KeyboardContainer(
                 )
                 if (item.emphasized) typeface = Typeface.DEFAULT_BOLD
                 contentDescription = item.label
-                setOnClickListener { onAction(item.action) }
+                setOnClickListener {
+                    // A light tick when a suggestion or tool is chosen, same feel as a cursor step.
+                    feedback?.tick(this)
+                    onAction(item.action)
+                }
             }
             val lp = if (fill) {
                 LinearLayout.LayoutParams(0, LayoutParams.MATCH_PARENT, 1f)
