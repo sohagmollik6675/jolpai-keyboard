@@ -61,7 +61,7 @@ class KeyboardContainer(
     private val servicePanel: @Composable (Panel, PanelColors, KeyboardUiState) -> Unit,
     private val palette: KeyboardPalette = KeyboardPalette.forContext(context),
     private val options: LayoutOptions = LayoutOptions(),
-    feedback: KeyFeedback? = null,
+    private val feedback: KeyFeedback? = null,
     /** Changes to one-handed / floating mode made from the keyboard itself. */
     private val onModeChange: (ModeChange) -> Unit = {},
     /** Learned touch offsets for predictive touch (owned and saved by the service). */
