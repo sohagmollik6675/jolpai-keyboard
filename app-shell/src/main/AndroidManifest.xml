@@ -6,6 +6,13 @@
          Android's installer, which asks the user to confirm. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- Screenshot suggestion: the keyboard offers the newest screenshot, like Gboard. Asked for on the
+         settings screen, since a keyboard can't show a permission prompt. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission
+        android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32" />
+
     <application
         android:name=".JolpaiApplication"
         android:enableOnBackInvokedCallback="true"
